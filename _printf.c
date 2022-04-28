@@ -1,44 +1,83 @@
 #include "main.h"
+#include <stdlib.h>
 /**
- *  _printf - produces output according to a format
- *  @format: format string containing the characters and the specifiers
- *  Description: this function will call the get_print() function that will
- *  determine which printing function to call depending on the conversion
- *  specifiers contained into fmt
- *  Return: length of the formatted output string
+ * *specifier - produces output according to a format
+ * @format: character string composed of zero or more directives
+ * Return: the number of characters printed
+ */
+int (*specifier(const char *format))(va_list)
+{
+int i = 0;
+op_t ops[] = {
+{"c", op_c},
+{"s", op_s},
+{"d", op_d},
+{"i", op_i},
+{"S", op_S},
+{"x", op_x},
+{"X", op_X},
+{"u", op_u},
+{"o", op_o},
+{"p", op_p},
+{"b", op_b},
+{"r", op_r},
+{"R", op_R},
+{NULL, NULL}
+};
+while (ops[i].op != NULL)
+{
+if (*(ops[i].op) == *format)
+{
+break;
+}
+i++;
+}
+return (ops[i].f);
+}
+/**
+ * _printf - produces output according to a format
+ * @format: character string composed of zero or more directives
+ * Return: the number of characters printed
  */
 int _printf(const char *format, ...)
 {
-int (*pfunc)(va_list, flags_t *);
-const char *p;
-va_list arguments;
-flags_t flags = {0, 0, 0};
-register int count = 0;
-va_start(arguments, format);
-if (!format || (format[0] == '%' && !format[1]))
+int i, count;
+va_list args;
+int (*f)(va_list);
+i = 0;
+count = 0;
+if (!format)
+{
 return (-1);
-if (format[0] == '%' && format[1] == ' ' && !format[2])
-return (-1);
-for (p = format; *p; p++)
+}
+va_start(args, format);
+while (format[i])
 {
-if (*p == '%')
+for (; format[i] != '%' && format[i]; i++)
 {
-p++;
-if (*p == '%')
+_putchar(format[i]);
+count++;
+}
+if (!(format[i]))
 {
-count += _putchar('%');
+return (count);
+}
+f = specifier(&format[i + 1]);
+if (f != NULL)
+{
+count += f(args);
+i += 2;
 continue;
 }
-while (get_flag(*p, &flags))
-p++;
-pfunc = get_print(*p);
-count += (pfunc)
-? pfunc(arguments, &flags)
-: _printf("%%%c", *p);
-} else
-count += _putchar(*p);
+if (!(format[i + 1]))
+return (-1);
+_putchar(format[i]);
+count++;
+if (format[i + 1] == '%')
+i += 2;
+else
+i++;
 }
-_putchar(-1);
-va_end(arguments);
+va_end(args);
 return (count);
 }
